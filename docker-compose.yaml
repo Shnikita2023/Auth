@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  database:
+    image: postgres:latest
+    restart: always
+    container_name: "database_auth"
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    ports:
+      - "5476:5432"
+    networks:
+      - custom
+
+networks:
+  custom:
+    driver: bridge
