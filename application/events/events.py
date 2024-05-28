@@ -1,17 +1,16 @@
+import json
 from dataclasses import dataclass
 
 
 @dataclass
-class Event:
+class DomainEvent:
     pass
 
 
 @dataclass
-class DomainCommand(Event):
-    pass
+class UserRegisteredEvent(DomainEvent):
+    type: str
+    message: dict
 
-
-@dataclass
-class IsApprovedAd(DomainCommand):
-    ad_oid: str
-    is_approved: bool
+    def to_json(self) -> str:
+        return json.dumps({"type": self.type, "message": self.message})

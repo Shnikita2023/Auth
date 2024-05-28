@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
-
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional, Any
 
 from application.domain.entities.credential import Credential as DomainCredential
 
@@ -9,9 +7,18 @@ from application.domain.entities.credential import Credential as DomainCredentia
 class AbstractCredentialRepository(ABC):
 
     @abstractmethod
-    async def add(self, session: AsyncSession, user: DomainCredential) -> DomainCredential:
+    async def add(self, user: DomainCredential) -> DomainCredential:
         raise NotImplemented
 
     @abstractmethod
-    async def get_user_by_param(self, session: AsyncSession, params: dict[str, Any]) -> DomainCredential | None:
+    async def get(self, user_oid: str) -> DomainCredential | None:
         raise NotImplemented
+
+    @abstractmethod
+    async def get_one_by_any_params(self, params: dict[str, Any]) -> Optional[DomainCredential]:
+        raise NotImplemented
+
+    @abstractmethod
+    async def get_one_by_all_params(self, params: dict[str, Any]) -> Optional[DomainCredential]:
+        raise NotImplemented
+

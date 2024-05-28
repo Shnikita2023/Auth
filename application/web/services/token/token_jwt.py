@@ -1,14 +1,13 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
-from typing import Annotated
 
 import jwt
-from fastapi import Request, Depends
+from fastapi import Request
 
 from application.config import settings
-from application.exceptions.domain import InvalidTokenError
-from application.services.user import UserService
-from application.web.views.user.schemas import UserOutput
+from application.exceptions import InvalidTokenError
+from application.services.user import get_credential_service
+from application.web.views.user.schemas import CredentialOutput
 
 ACCESS_TOKEN_TYPE = "access"
 REFRESH_TOKEN_TYPE = "refresh"
@@ -67,15 +66,15 @@ class TokenManager:
     def __init__(self, token_service: TokenAbstractService):
         self.token_service = token_service
 
-    def create_token(self, user_schema: UserOutput, type_token: str) -> str:
+    def create_token(self, credo_schema: CredentialOutput, type_token: str) -> str:
         if type_token == ACCESS_TOKEN_TYPE:
-            jwt_payload: dict = {"sub": user_schema.oid,
-                                 "first_name": user_schema.first_name,
-                                 "email": user_schema.email,
-                                 "role": user_schema.role,
+            jwt_payload: dict = {"sub": credo_schema.oid,
+                                 "first_name": credo_schema.first_name,
+                                 "email": credo_schema.email,
+                                 "role": credo_schema.role,
                                  "type": ACCESS_TOKEN_TYPE}
         else:
-            jwt_payload: dict = {"sub": user_schema.oid, "type": REFRESH_TOKEN_TYPE}
+            jwt_payload: dict = {"sub": credo_schema.oid, "type": REFRESH_TOKEN_TYPE}
 
         return self.token_service.encode_token(payload=jwt_payload)
 
@@ -93,15 +92,15 @@ class TokenManager:
 
     async def get_auth_user_from_token_of_type(self,
                                                payload: dict,
-                                               token_type: str) -> UserOutput:
+                                               token_type: str) -> CredentialOutput:
         self.validate_token_type(payload, token_type)
         return await self.get_user_by_token_sub(payload)
 
     @staticmethod
-    async def get_user_by_token_sub(payload: dict) -> UserOutput:
+    async def get_user_by_token_sub(payload: dict) -> CredentialOutput:
         user_oid: str | None = payload.get("sub")
-        user = await UserService().get_user_by_id(user_oid)
-        return UserOutput.to_schema(user)
+        user = await get_credential_service().get_user_by_id(user_oid)
+        return CredentialOutput.to_schema(user)
 
     @staticmethod
     def validate_token_type(payload: dict, token_type: str) -> bool:

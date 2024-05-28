@@ -7,7 +7,7 @@ class Producer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def delivery_message(self, message) -> None:
+    async def delivery_message(self, message: str, topic: str) -> None:
         raise NotImplementedError
 
     @abstractmethod

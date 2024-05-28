@@ -59,6 +59,22 @@ class UserAlreadyExistsError(ApplicationException):
         return "The user already exists"
 
 
+class UserNotFoundError(ApplicationException):
+    status_code = 400
+
+    @property
+    def message(self) -> str:
+        return "The user was not found"
+
+
+class InvalidUserDataError(ApplicationException):
+    status_code = 400
+
+    @property
+    def message(self) -> str:
+        return "Invalid username or password"
+
+
 @dataclass(eq=False)
 class DBError(ApplicationException):
     exception: Exception
@@ -76,9 +92,17 @@ class InvalidTokenError(ApplicationException):
         return "Invalid token"
 
 
-class InvalidUserDataError(ApplicationException):
-    status_code = 400
+class KafkaError(ApplicationException):
+    status_code = 500
 
     @property
     def message(self) -> str:
-        return "Invalid username or password"
+        return "Ошибка подключение к брокеру Kafka"
+
+
+class AccessDeniedError(ApplicationException):
+    status_code = 403
+
+    @property
+    def message(self) -> str:
+        return "Access denied"

@@ -2,8 +2,8 @@
 FROM python:3.11 AS base
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-RUN mkdir /avido
-WORKDIR /avido
+RUN mkdir /auth
+WORKDIR /auth
 RUN pip install --upgrade pip
 RUN pip install poetry
 ADD pyproject.toml .

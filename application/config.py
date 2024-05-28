@@ -31,15 +31,22 @@ class AuthJWT(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTE: int
 
 
-class Endpoints(BaseSettings):
-    ENDPOINT_SIGN_UP: str
+class KafkaSettings(BaseSettings):
+    KAFKA_HOST: str
+    KAFKA_PORT: int
+    USER_TOPIC: str
+    TOKEN_TOPIC: str
+
+    @property
+    def url(self):
+        return f"{self.KAFKA_HOST}:{self.KAFKA_PORT}"
 
 
 class Settings:
     db: DbSettings = DbSettings()
     auth_jwt: AuthJWT = AuthJWT()
     session_cookie: SessionCookie = SessionCookie()
-    endpoint: Endpoints = Endpoints()
+    kafka: KafkaSettings = KafkaSettings()
 
 
 settings = Settings()
