@@ -1,10 +1,12 @@
 import asyncio
 from typing import Annotated
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, status
 
 from application.config import settings
 from application.domain.entities.credential import Credential as DomainCredential
 from application.events import UserRegisteredEvent
+from application.infrastructure.brokers.producers.kafka import ProducerKafka
+from application.infrastructure.dependencies.dependence import get_kafka_producer
 from application.services.user import get_credential_service, CredentialService
 from application.web.services.token.schemas import TokenInfo
 from application.web.services.token.token_jwt import token_manager, ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
@@ -18,13 +20,13 @@ router = APIRouter(prefix="/auth",
              summary="Регистрация пользователя",
              response_model=CredentialOutput,
              status_code=status.HTTP_201_CREATED)
-async def add_user(request: Request,
-                   credo_service: Annotated[CredentialService, Depends(get_credential_service)],
+async def add_user(credo_service: Annotated[CredentialService, Depends(get_credential_service)],
+                   kafka_producer: Annotated[ProducerKafka, Depends(get_kafka_producer)],
                    credo_schema: CredentialInput) -> CredentialOutput:
     user = await credo_service.create_user(user=credo_schema.to_domain())
     broker_message = UserRegisteredEvent(message=credo_schema.model_dump())
-    asyncio.create_task(request.app.state.producer_kafka.delivery_message(message=broker_message.to_json(),
-                                                                          topic=settings.kafka.USER_TOPIC))
+    asyncio.create_task(kafka_producer.delivery_message(message=broker_message.to_json(),
+                                                        topic=settings.kafka.USER_TOPIC))
     return CredentialOutput.to_schema(user)
 
 
@@ -52,7 +54,6 @@ async def refresh_access_token(payload: Annotated[dict, Depends(token_manager.ge
     return TokenInfo(access_token=access_token)
 
 
-# TODO Позже нужна будет реализовать
 # @router.post(path="/forgot_password", summary="Восстановление пароля пользователя")
 # async def forgot_password(forgot_data: ForgotUser,
 #                           session: AsyncSession = Depends(get_async_session),
