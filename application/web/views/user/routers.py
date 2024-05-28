@@ -1,16 +1,17 @@
 import asyncio
 from typing import Annotated
 from fastapi import APIRouter, Depends, status
+from redis.asyncio import Redis
 
 from application.config import settings
 from application.domain.entities.credential import Credential as DomainCredential
 from application.events import UserRegisteredEvent
 from application.infrastructure.brokers.producers.kafka import ProducerKafka
-from application.infrastructure.dependencies.dependence import get_kafka_producer
+from application.infrastructure.dependencies.dependence import get_kafka_producer, get_async_redis_client
 from application.services.user import get_credential_service, CredentialService
 from application.web.services.token.schemas import TokenInfo
 from application.web.services.token.token_jwt import token_manager, ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
-from application.web.views.user.schemas import CredentialOutput, CredentialInput
+from application.web.views.user.schemas import CredentialOutput, CredentialInput, ForgotUser, ResetUser
 
 router = APIRouter(prefix="/auth",
                    tags=["Auth"])
@@ -54,21 +55,24 @@ async def refresh_access_token(payload: Annotated[dict, Depends(token_manager.ge
     return TokenInfo(access_token=access_token)
 
 
-# @router.post(path="/forgot_password", summary="Восстановление пароля пользователя")
-# async def forgot_password(forgot_data: ForgotUser,
-#                           session: AsyncSession = Depends(get_async_session),
-#                           redis_client: Redis = Depends(get_async_redis_client)) -> dict:
-#     return await PasswordForgot(user_email=forgot_data.email,
-#                                 session=session,
-#                                 redis_client=redis_client).forgot_password_user()
-#
-#
-# @router.post(path="/reset_password", summary="Сброс пароля пользователя")
-# async def reset_password(reset_data: ResetUser,
-#                          session: AsyncSession = Depends(get_async_session),
-#                          redis_client: Redis = Depends(get_async_redis_client)):
-#     return await PasswordReset(token=reset_data.token,
-#                                password=reset_data.password,
-#                                user_email=reset_data.email,
-#                                session=session,
-#                                redis_client=redis_client).reset_password_user()
+@router.post(path="/forgot-password",
+             summary="Восстановление пароля пользователя",
+             status_code=status.HTTP_200_OK)
+async def forgot_password(forgot_schema: ForgotUser,
+                          credo_service: Annotated[CredentialService, Depends(get_credential_service)],
+                          redis_client: Redis = Depends(get_async_redis_client)) -> dict:
+    await credo_service.forgot_password_user(email=forgot_schema.email, redis_client=redis_client)
+    return {"message": "На ваш email отправлена ссылка на сброс пароля"}
+
+
+@router.patch(path="/reset_password",
+              summary="Сброс пароля пользователя",
+              status_code=status.HTTP_200_OK)
+async def reset_password(reset_schema: ResetUser,
+                         credo_service: Annotated[CredentialService, Depends(get_credential_service)],
+                         redis_client: Redis = Depends(get_async_redis_client)):
+    await credo_service.reset_password_user(email=reset_schema.email,
+                                            new_password=reset_schema.password,
+                                            token=reset_schema.token,
+                                            redis_client=redis_client)
+    return {"message": "Пароль успешно сброшен и установлен новый"}

@@ -62,12 +62,13 @@ class Credential(Base):
     def to_dict(credential: DomainCredential) -> dict[str, str]:
         return {
             "oid": credential.oid,
-            "first_name": credential.first_name,
-            "last_name": credential.last_name,
-            "middle_name": credential.middle_name,
-            "email": credential.email,
-            "role": credential.role,
-            "number_phone": credential.number_phone,
+            "first_name": credential.first_name.value,
+            "last_name": credential.last_name.value,
+            "middle_name": credential.middle_name.value,
+            "password": credential.password,
+            "email": credential.email.value,
+            "role": credential.role.name,
+            "number_phone": credential.number_phone.value,
             "time_call": credential.time_call,
-            "status": credential.status
+            "status": credential.status.name
         }

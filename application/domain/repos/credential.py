@@ -22,3 +22,7 @@ class AbstractCredentialRepository(ABC):
     async def get_one_by_all_params(self, params: dict[str, Any]) -> Optional[DomainCredential]:
         raise NotImplemented
 
+    @abstractmethod
+    async def update(self, credo: DomainCredential) -> DomainCredential:
+        raise NotImplemented
+

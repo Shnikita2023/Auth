@@ -1,3 +1,5 @@
+from typing import Optional
+
 import bcrypt
 from datetime import datetime
 
@@ -41,9 +43,12 @@ class Credential(BaseModel):
     def to_json(self) -> dict:
         return self.model_dump(exclude={"password"})
 
-    def encrypt_password(self) -> None:
+    def encrypt_password(self, new_password: Optional[str] = None) -> None:
         salt: bytes = bcrypt.gensalt()
-        pwd_bytes: bytes = self.password.value.encode()
+        if new_password:
+            pwd_bytes: bytes = new_password.encode()
+        else:
+            pwd_bytes: bytes = self.password.value.encode()
         self.password: bytes = bcrypt.hashpw(pwd_bytes, salt)
 
     def is_password_valid(self, password: str) -> bool:

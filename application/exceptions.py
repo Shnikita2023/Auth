@@ -100,6 +100,14 @@ class KafkaError(ApplicationException):
         return "Ошибка подключение к брокеру Kafka"
 
 
+class RedisTokenError(ApplicationException):
+    status_code = 500
+
+    @property
+    def message(self) -> str:
+        return "Ошибка работы с временным токеном"
+
+
 class AccessDeniedError(ApplicationException):
     status_code = 403
 

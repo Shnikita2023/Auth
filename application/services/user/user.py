@@ -2,11 +2,13 @@ import logging
 from typing import Optional, Any
 
 from fastapi import Form
+from redis.asyncio import Redis
 
 from application.domain.entities.credential import Credential as DomainCredential
 from application.exceptions import UserNotFoundError, UserAlreadyExistsError, InvalidUserDataError
 from application.infrastructure.dependencies.dependence import get_unit_of_work
 from application.repos.uow.unit_of_work import AbstractUnitOfWork
+from application.services.user.utils import PasswordForgot, PasswordReset
 
 logger = logging.getLogger(__name__)
 
@@ -52,13 +54,38 @@ class CredentialService:
             logger.info(f"Успешно пройдена валидация пользователя '{user.first_name}'. Status: 200")
         return user
 
-    # @staticmethod
-    # def check_role(role: tuple = ("USER",)) -> None:
-    #     user_current = get_payload_current_user()
-    #     if user_current.get("role") not in role:
-    #         raise AccessDeniedError
+    async def forgot_password_user(self,
+                                   email: str,
+                                   redis_client: Redis) -> None:
+        async with self.uow:
+            params_search = {"email": email}
+            credential: DomainCredential | None = await self.uow.credential.get_one_by_all_params(params_search)
+
+            if not credential:
+                raise UserNotFoundError
+
+            await PasswordForgot().forgot_password(redis_client=redis_client,
+                                                   email=email,
+                                                   user_oid=credential.oid)
+
+    async def reset_password_user(self,
+                                  email: str,
+                                  new_password: str,
+                                  token: str,
+                                  redis_client: Redis) -> None:
+        async with self.uow:
+            params_search = {"email": email}
+            credential: DomainCredential | None = await self.uow.credential.get_one_by_all_params(params_search)
+            if not credential:
+                raise UserNotFoundError
+
+            await PasswordReset().reset_password(redis_client=redis_client,
+                                                 user_oid=credential.oid,
+                                                 token=token)
+            credential.encrypt_password(new_password)
+            await self.uow.credential.update(credo=credential)
+            await self.uow.commit()
 
 
 def get_credential_service() -> CredentialService:
     return CredentialService()
-

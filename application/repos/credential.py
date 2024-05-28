@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -57,6 +57,12 @@ class SQLAlchemyCredentialRepository(AbstractCredentialRepository):
         except SQLAlchemyError as exc:
             raise DBError(exc)
 
+    async def update(self, credo: DomainCredential) -> DomainCredential:
+        try:
+            updated_credential: dict[str, str] = Credential.to_dict(credential=credo)
+            stmt = update(Credential).where(Credential.oid == credo.oid).values(updated_credential)
+            await self.session.execute(stmt)
+            return credo
 
-
-
+        except SQLAlchemyError as exc:
+            raise DBError(exc)

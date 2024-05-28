@@ -33,7 +33,7 @@ main_app = FastAPI(version="1.1.1",
 
 
 @main_app.exception_handler(ApplicationException)
-async def application_exception_handler(exc: ApplicationException):
+async def application_exception_handler(request: Request, exc: ApplicationException):
     logger.error(msg=f"Error: {exc.message} :: Status: {exc.status_code}", exc_info=exc)
     return JSONResponse(status_code=exc.status_code, content={"status": "error",
                                                               "data": f"{datetime.now()}",

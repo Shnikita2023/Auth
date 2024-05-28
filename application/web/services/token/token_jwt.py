@@ -1,8 +1,10 @@
+import secrets
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 
 import jwt
 from fastapi import Request
+from redis.asyncio import Redis
 
 from application.config import settings
 from application.exceptions import InvalidTokenError
@@ -109,6 +111,16 @@ class TokenManager:
             return True
 
         raise InvalidTokenError
+
+    @staticmethod
+    async def set_token_by_redis(user_id: int, token: str, redis_client: Redis):
+        await redis_client.setex(name=f"user_{user_id}", value=token, time=6000)
+        return token
+
+    @staticmethod
+    async def generate_temporary_token() -> str:
+        token: str = secrets.token_hex(32)
+        return token
 
 
 token_jwt_service = TokenJWTService()

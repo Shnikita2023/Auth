@@ -53,6 +53,16 @@ services:
     networks:
       - custom
 
+  redis_app:
+    image: redis:latest
+    restart: always
+    env_file:
+      - .env
+    container_name: "redis_auth"
+    ports:
+      - "6001:6379"
+    networks:
+      - custom
 
 networks:
   custom:

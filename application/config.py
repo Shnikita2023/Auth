@@ -38,8 +38,17 @@ class KafkaSettings(BaseSettings):
     TOKEN_TOPIC: str
 
     @property
-    def url(self):
+    def url(self) -> str:
         return f"{self.KAFKA_HOST}:{self.KAFKA_PORT}"
+
+
+class RedisSettings(BaseSettings):
+    REDIS_HOST: str
+    REDIS_PORT: int
+
+    @property
+    def url(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}?decode_responses=True&protocol=3"
 
 
 class Settings:
@@ -47,6 +56,7 @@ class Settings:
     auth_jwt: AuthJWT = AuthJWT()
     session_cookie: SessionCookie = SessionCookie()
     kafka: KafkaSettings = KafkaSettings()
+    redis: RedisSettings = RedisSettings()
 
 
 settings = Settings()
