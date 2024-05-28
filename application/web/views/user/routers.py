@@ -22,7 +22,7 @@ async def add_user(request: Request,
                    credo_service: Annotated[CredentialService, Depends(get_credential_service)],
                    credo_schema: CredentialInput) -> CredentialOutput:
     user = await credo_service.create_user(user=credo_schema.to_domain())
-    broker_message = UserRegisteredEvent(type="user_registration", message=credo_schema.model_dump())
+    broker_message = UserRegisteredEvent(message=credo_schema.model_dump())
     asyncio.create_task(request.app.state.producer_kafka.delivery_message(message=broker_message.to_json(),
                                                                           topic=settings.kafka.USER_TOPIC))
     return CredentialOutput.to_schema(user)

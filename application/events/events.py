@@ -9,8 +9,8 @@ class DomainEvent:
 
 @dataclass
 class UserRegisteredEvent(DomainEvent):
-    type: str
     message: dict
+    type: str = "UserRegisteredEvent"
 
     def to_json(self) -> str:
         return json.dumps({"type": self.type, "message": self.message})
