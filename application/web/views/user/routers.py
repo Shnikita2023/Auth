@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, BackgroundTasks
 from redis.asyncio import Redis
@@ -69,7 +70,9 @@ async def forgot_password(forgot_schema: ForgotUser,
                           redis_client: Redis = Depends(get_async_redis_client)) -> dict:
     temporary_token = await credo_service.forgot_password_user(email=forgot_schema.email, redis_client=redis_client)
     background_tasks.add_task(send_password_reset_email, email=forgot_schema.email, token=temporary_token)
-    return {"message": "На ваш email отправлена ссылка на сброс пароля"}
+    return {"status": "successfully",
+            "data": f"{datetime.now()}",
+            "detail": "На ваш email отправлена ссылка на сброс пароля"}
 
 
 @router.patch(path="/reset-password",
@@ -82,7 +85,9 @@ async def reset_password(reset_schema: ResetUser,
                                             new_password=reset_schema.password,
                                             token=reset_schema.token,
                                             redis_client=redis_client)
-    return {"message": "Пароль успешно сброшен и установлен новый"}
+    return {"status": "successfully",
+            "data": f"{datetime.now()}",
+            "detail": "Пароль успешно сброшен и установлен новый"}
 
 
 @router.get(path="/activate",
@@ -93,4 +98,6 @@ async def activate_account(code: str,
                            redis_client: Redis = Depends(get_async_redis_client)) -> dict:
     await credo_service.validate_activation_code(code=code,
                                                  redis_client=redis_client)
-    return {"message": "Аккаунт успешно активирован"}
+    return {"status": "successfully",
+            "data": f"{datetime.now()}",
+            "detail": "Аккаунт успешно активирован"}

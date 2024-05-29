@@ -2,7 +2,7 @@ import logging
 
 from pydantic import EmailStr
 
-from application.infrastructure.email_service.client.aiosmtp_client import AIOSMTPClient, aiosmtp_client_context
+from .client.aiosmtp_client import AIOSMTPClient, aiosmtp_client_context
 
 logger = logging.getLogger(__name__)
 URL: str = "http://127.0.0.1:8002/api/v1/auth/"

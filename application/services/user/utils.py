@@ -11,7 +11,7 @@ class PasswordForgot:
     Класс для восстановления пароля пользователя
     """
 
-    async def forgot_password(self, redis_client: Redis, email: str, user_oid: str) -> str:
+    async def forgot_password(self, redis_client: Redis, user_oid: str) -> str:
         token: str = self.generate_temporary_token()
         await self.set_token_by_redis(user_id=user_oid,
                                       token=token,
@@ -19,10 +19,9 @@ class PasswordForgot:
         return token
 
     @staticmethod
-    async def set_token_by_redis(user_id: str, token: str, redis_client: Redis) -> str:
+    async def set_token_by_redis(user_id: str, token: str, redis_client: Redis) -> None:
         try:
             await redis_client.setex(name=f"user_{user_id}", value=token, time=6000)
-            return token
 
         except RedisError:
             raise RedisConnectError

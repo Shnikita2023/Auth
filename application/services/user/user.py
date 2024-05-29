@@ -81,7 +81,6 @@ class CredentialService:
                 raise UserNotFoundError
 
             return await PasswordForgot().forgot_password(redis_client=redis_client,
-                                                          email=email,
                                                           user_oid=credential.oid)
 
     async def reset_password_user(self,

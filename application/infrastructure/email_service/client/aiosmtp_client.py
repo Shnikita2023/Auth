@@ -8,7 +8,7 @@ from pydantic import EmailStr
 
 from application.config import settings
 from application.exceptions import SMTPConnectError, SMTPAuthError
-from application.infrastructure.email_service.client.base import EmailClient
+from .base import EmailClient
 
 logger = logging.getLogger(__name__)
 

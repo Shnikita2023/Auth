@@ -18,6 +18,7 @@ pyjwt = {extras = ["crypto"], version = "^2.8.0"}
 aiokafka = "^0.10.0"
 redis = "^5.0.4"
 aiosmtplib = "^3.0.1"
+faststream = {extras = ["kafka"], version = "^0.5.9"}
 
 [build-system]
 requires = ["poetry-core"]
