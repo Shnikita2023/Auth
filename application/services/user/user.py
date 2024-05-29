@@ -1,14 +1,20 @@
 import logging
+import secrets
 from typing import Optional, Any
 
-from fastapi import Form
+from fastapi import Form, BackgroundTasks
 from redis.asyncio import Redis
 
 from application.domain.entities.credential import Credential as DomainCredential
-from application.exceptions import UserNotFoundError, UserAlreadyExistsError, InvalidUserDataError
+from application.exceptions import UserNotFoundError, UserAlreadyExistsError, InvalidUserDataError, AccountActivateError
 from application.infrastructure.dependencies.dependence import get_unit_of_work
+from application.infrastructure.email_service.send_letter import send_letter_on_activate_account
 from application.repos.uow.unit_of_work import AbstractUnitOfWork
-from application.services.user.utils import PasswordForgot, PasswordReset
+from application.services.user.utils import (
+    PasswordForgot, PasswordReset,
+    save_activation_code_to_redis, check_activation_code_from_redis
+
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +32,10 @@ class CredentialService:
                 return user
             raise UserNotFoundError
 
-    async def create_user(self, user: DomainCredential) -> DomainCredential:
+    async def create_user(self,
+                          user: DomainCredential,
+                          background_tasks: BackgroundTasks,
+                          redis_client: Redis) -> DomainCredential:
         params_search = {"email": user.email.value, "number_phone": user.number_phone.value}
         async with self.uow:
             existing_user = await self._check_existing_user(params_search)
@@ -36,8 +45,15 @@ class CredentialService:
             user.encrypt_password()
             await self.uow.credential.add(user)
             await self.uow.commit()
+            background_tasks.add_task(self._on_after_create_user, user, redis_client)
             logger.info(f"Пользователь с id {user.oid} успешно создан. Status: 201")
         return user
+
+    @staticmethod
+    async def _on_after_create_user(user: DomainCredential, redis_client: Redis) -> None:
+        activation_code: str = secrets.token_urlsafe(16)
+        await save_activation_code_to_redis(user_oid=user.oid, redis_client=redis_client, code=activation_code)
+        await send_letter_on_activate_account(email=user.email.value, activation_code=activation_code)
 
     async def _check_existing_user(self, params_search: dict[str, Any]) -> Optional[DomainCredential]:
         return await self.uow.credential.get_one_by_any_params(params_search)
@@ -56,7 +72,7 @@ class CredentialService:
 
     async def forgot_password_user(self,
                                    email: str,
-                                   redis_client: Redis) -> None:
+                                   redis_client: Redis) -> str:
         async with self.uow:
             params_search = {"email": email}
             credential: DomainCredential | None = await self.uow.credential.get_one_by_all_params(params_search)
@@ -64,9 +80,9 @@ class CredentialService:
             if not credential:
                 raise UserNotFoundError
 
-            await PasswordForgot().forgot_password(redis_client=redis_client,
-                                                   email=email,
-                                                   user_oid=credential.oid)
+            return await PasswordForgot().forgot_password(redis_client=redis_client,
+                                                          email=email,
+                                                          user_oid=credential.oid)
 
     async def reset_password_user(self,
                                   email: str,
@@ -84,6 +100,18 @@ class CredentialService:
                                                  token=token)
             credential.encrypt_password(new_password)
             await self.uow.credential.update(credo=credential)
+            await self.uow.commit()
+
+    async def validate_activation_code(self, code: str, redis_client: Redis):
+        user_oid: str = await check_activation_code_from_redis(redis_client, code)
+        user: DomainCredential = await self.get_user_by_id(user_oid)
+        if user.status.ACTIVE:
+            raise AccountActivateError
+
+        user.encrypt_password()
+        user.is_status_activate()
+        async with self.uow:
+            await self.uow.credential.update(credo=user)
             await self.uow.commit()
 
 

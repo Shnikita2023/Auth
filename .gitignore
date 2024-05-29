@@ -5,3 +5,6 @@ venv/
 *.log
 pg_data/
 .pytest_cache/
+.env
+.env.dev
+certs/

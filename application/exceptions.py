@@ -108,9 +108,49 @@ class RedisTokenError(ApplicationException):
         return "Ошибка работы с временным токеном"
 
 
+class RedisCodeError(ApplicationException):
+    status_code = 400
+
+    @property
+    def message(self) -> str:
+        return "Неверный код активации"
+
+
+class RedisConnectError(ApplicationException):
+    status_code = 500
+
+    @property
+    def message(self) -> str:
+        return "Ошибка работы с Redis"
+
+
+class SMTPConnectError(ApplicationException):
+    status_code = 500
+
+    @property
+    def message(self) -> str:
+        return "Ошибка подключение к SMTP серверу"
+
+
+class SMTPAuthError(ApplicationException):
+    status_code = 500
+
+    @property
+    def message(self) -> str:
+        return "Ошибка аутентификации с SMTP сервером"
+
+
 class AccessDeniedError(ApplicationException):
     status_code = 403
 
     @property
     def message(self) -> str:
         return "Access denied"
+
+
+class AccountActivateError(ApplicationException):
+    status_code = 400
+
+    @property
+    def message(self) -> str:
+        return "Аккаунт уже активирован"

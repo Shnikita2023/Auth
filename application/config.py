@@ -51,12 +51,20 @@ class RedisSettings(BaseSettings):
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}?decode_responses=True&protocol=3"
 
 
+class EmailSettings(BaseSettings):
+    SMTP_PASSWORD: str
+    SMTP_USER: str
+    SMTP_HOST: str
+    SMTP_PORT: int
+
+
 class Settings:
     db: DbSettings = DbSettings()
     auth_jwt: AuthJWT = AuthJWT()
     session_cookie: SessionCookie = SessionCookie()
     kafka: KafkaSettings = KafkaSettings()
     redis: RedisSettings = RedisSettings()
+    email: EmailSettings = EmailSettings()
 
 
 settings = Settings()

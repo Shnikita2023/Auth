@@ -3,7 +3,7 @@ import secrets
 from redis.asyncio.client import Redis
 from redis import RedisError
 
-from application.exceptions import RedisTokenError
+from application.exceptions import RedisTokenError, RedisCodeError, RedisConnectError
 
 
 class PasswordForgot:
@@ -11,14 +11,12 @@ class PasswordForgot:
     Класс для восстановления пароля пользователя
     """
 
-    async def forgot_password(self, redis_client: Redis, email: str, user_oid: str) -> dict:
+    async def forgot_password(self, redis_client: Redis, email: str, user_oid: str) -> str:
         token: str = self.generate_temporary_token()
         await self.set_token_by_redis(user_id=user_oid,
                                       token=token,
                                       redis_client=redis_client)
-        # TODO нужна реализовать отправку токена на емайл
-        # await send_password_reset_email(email=user.email, token=token)
-        return {"message": "На ваш email отправлена ссылка на сброс пароля"}
+        return token
 
     @staticmethod
     async def set_token_by_redis(user_id: str, token: str, redis_client: Redis) -> str:
@@ -27,7 +25,7 @@ class PasswordForgot:
             return token
 
         except RedisError:
-            raise RedisTokenError
+            raise RedisConnectError
 
     @staticmethod
     def generate_temporary_token() -> str:
@@ -61,4 +59,29 @@ class PasswordReset:
             raise RedisTokenError
 
         except RedisError:
-            raise RedisTokenError
+            raise RedisConnectError
+
+
+async def save_activation_code_to_redis(user_oid: str, redis_client: Redis, code: str) -> None:
+    try:
+        data: str = f"{code} {user_oid}"
+        await redis_client.setex(name=f"code_{code}", value=data, time=86400)
+
+    except RedisError:
+        raise RedisConnectError
+
+
+async def check_activation_code_from_redis(redis_client: Redis, code: str) -> str:
+    try:
+        data: str = await redis_client.get(f"code_{code}")
+        if not data:
+            raise RedisCodeError
+
+        activate_code, user_oid = data.split()
+        if activate_code != code:
+            raise RedisCodeError
+
+        return user_oid
+
+    except RedisError:
+        raise RedisConnectError

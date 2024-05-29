@@ -53,3 +53,6 @@ class Credential(BaseModel):
 
     def is_password_valid(self, password: str) -> bool:
         return bcrypt.checkpw(password=password.encode(), hashed_password=self.password.value.encode())
+
+    def is_status_activate(self):
+        self.status = Status.ACTIVE
