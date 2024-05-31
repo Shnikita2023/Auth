@@ -40,8 +40,18 @@ class Credential(BaseModel):
             oid=json["oid"] if json.get("oid") else str(uuid4())
         )
 
-    def to_json(self) -> dict:
-        return self.model_dump(exclude={"password"})
+    def to_dict(self) -> dict:
+        return {
+            "first_name": self.first_name.value,
+            "last_name": self.last_name.value,
+            "middle_name": self.middle_name.value,
+            "email": self.email.value,
+            "number_phone": self.number_phone.value,
+            "time_call": self.time_call,
+            "status": self.status.name,
+            "created_at": self.created_at,
+            "role": self.role.name
+        }
 
     def encrypt_password(self, new_password: Optional[str] = None) -> None:
         salt: bytes = bcrypt.gensalt()

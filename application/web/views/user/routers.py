@@ -1,12 +1,10 @@
-import asyncio
 from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, BackgroundTasks
 from redis.asyncio import Redis
 
-from application.config import settings
 from application.domain.entities.credential import Credential as DomainCredential
-from application.events import UserRegisteredEvent
+
 from application.infrastructure.brokers.producers.kafka import ProducerKafka
 from application.infrastructure.dependencies.dependence import get_kafka_producer, get_async_redis_client
 from application.infrastructure.email_service.send_letter import send_password_reset_email
@@ -30,10 +28,8 @@ async def add_user(credo_service: Annotated[CredentialService, Depends(get_crede
                    redis_client: Redis = Depends(get_async_redis_client)) -> CredentialOutput:
     user = await credo_service.create_user(user=credo_schema.to_domain(),
                                            background_tasks=background_tasks,
-                                           redis_client=redis_client)
-    broker_message = UserRegisteredEvent(message=credo_schema.model_dump())
-    asyncio.create_task(kafka_producer.delivery_message(message=broker_message.to_json(),
-                                                        topic=settings.kafka.USER_TOPIC))
+                                           redis_client=redis_client,
+                                           kafka_producer=kafka_producer)
     return CredentialOutput.to_schema(user)
 
 
@@ -95,9 +91,11 @@ async def reset_password(reset_schema: ResetUser,
             status_code=status.HTTP_200_OK)
 async def activate_account(code: str,
                            credo_service: Annotated[CredentialService, Depends(get_credential_service)],
+                           kafka_producer: Annotated[ProducerKafka, Depends(get_kafka_producer)],
                            redis_client: Redis = Depends(get_async_redis_client)) -> dict:
     await credo_service.validate_activation_code(code=code,
-                                                 redis_client=redis_client)
+                                                 redis_client=redis_client,
+                                                 kafka_producer=kafka_producer)
     return {"status": "successfully",
             "data": f"{datetime.now()}",
             "detail": "Аккаунт успешно активирован"}
