@@ -2,7 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -33,11 +33,22 @@ main_app = FastAPI(version="1.1.1",
 
 
 @main_app.exception_handler(ApplicationException)
-async def application_exception_handler(request: Request, exc: ApplicationException):
+async def application_exception(request: Request, exc: ApplicationException) -> JSONResponse:
     logger.error(msg=f"Error: {exc.message} :: Status: {exc.status_code}", exc_info=exc)
     return JSONResponse(status_code=exc.status_code, content={"status": "error",
                                                               "data": f"{datetime.now()}",
                                                               "detail": exc.message})
+
+
+@main_app.exception_handler(Exception)
+async def default_exception(request: Request, exc: Exception) -> JSONResponse:
+    logger.error(msg=f"Error: {exc} :: Status: {status.HTTP_500_INTERNAL_SERVER_ERROR}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"status": "error",
+                 "data": f"{datetime.now()}",
+                 "details": "Что-то пошло не так, попробуйте позже"},
+    )
 
 
 main_app.include_router(router_v1, prefix="/api/v1")

@@ -51,6 +51,7 @@ class PhoneValidationError(ApplicationException):
         return f"Неверный формат поля phone: {self.text}, должно содержать 11 цифр и начинаться с 7 или 8"
 
 
+@dataclass(eq=False)
 class UserAlreadyExistsError(ApplicationException):
     status_code = 400
 
@@ -59,6 +60,7 @@ class UserAlreadyExistsError(ApplicationException):
         return "The user already exists"
 
 
+@dataclass(eq=False)
 class UserNotFoundError(ApplicationException):
     status_code = 400
 
@@ -67,6 +69,7 @@ class UserNotFoundError(ApplicationException):
         return "The user was not found"
 
 
+@dataclass(eq=False)
 class InvalidUserDataError(ApplicationException):
     status_code = 400
 
@@ -84,6 +87,7 @@ class DBError(ApplicationException):
         return "Ошибка подключение к базе данных"
 
 
+@dataclass(eq=False)
 class InvalidTokenError(ApplicationException):
     status_code = 401
 
@@ -92,6 +96,7 @@ class InvalidTokenError(ApplicationException):
         return "Invalid token"
 
 
+@dataclass(eq=False)
 class KafkaError(ApplicationException):
     status_code = 500
 
@@ -100,6 +105,7 @@ class KafkaError(ApplicationException):
         return "Ошибка подключение к брокеру Kafka"
 
 
+@dataclass(eq=False)
 class RedisTokenError(ApplicationException):
     status_code = 500
 
@@ -108,6 +114,7 @@ class RedisTokenError(ApplicationException):
         return "Ошибка работы с временным токеном"
 
 
+@dataclass(eq=False)
 class RedisCodeError(ApplicationException):
     status_code = 400
 
@@ -116,6 +123,7 @@ class RedisCodeError(ApplicationException):
         return "Неверный код активации"
 
 
+@dataclass(eq=False)
 class RedisConnectError(ApplicationException):
     status_code = 500
 
@@ -124,6 +132,7 @@ class RedisConnectError(ApplicationException):
         return "Ошибка работы с Redis"
 
 
+@dataclass(eq=False)
 class SMTPConnectError(ApplicationException):
     status_code = 500
 
@@ -132,6 +141,7 @@ class SMTPConnectError(ApplicationException):
         return "Ошибка подключение к SMTP серверу"
 
 
+@dataclass(eq=False)
 class SMTPAuthError(ApplicationException):
     status_code = 500
 
@@ -140,6 +150,7 @@ class SMTPAuthError(ApplicationException):
         return "Ошибка аутентификации с SMTP сервером"
 
 
+@dataclass(eq=False)
 class AccessDeniedError(ApplicationException):
     status_code = 403
 
@@ -148,6 +159,7 @@ class AccessDeniedError(ApplicationException):
         return "Access denied"
 
 
+@dataclass(eq=False)
 class AccountActivateError(ApplicationException):
     status_code = 400
 

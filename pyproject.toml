@@ -19,6 +19,7 @@ aiokafka = "^0.10.0"
 redis = "^5.0.4"
 aiosmtplib = "^3.0.1"
 faststream = {extras = ["kafka"], version = "^0.5.9"}
+pillow = "^10.3.0"
 
 [build-system]
 requires = ["poetry-core"]
