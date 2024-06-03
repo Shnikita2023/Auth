@@ -5,6 +5,7 @@ from datetime import datetime
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.sessions import SessionMiddleware
 
 from application.config import settings
 from application.exceptions import ApplicationException
@@ -52,6 +53,7 @@ async def default_exception(request: Request, exc: Exception) -> JSONResponse:
 
 
 main_app.include_router(router_v1, prefix="/api/v1")
+main_app.add_middleware(SessionMiddleware, secret_key="ghvabsg123fsdf")
 
 main_app.add_middleware(
     CORSMiddleware,

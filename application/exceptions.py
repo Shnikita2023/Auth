@@ -166,3 +166,12 @@ class AccountActivateError(ApplicationException):
     @property
     def message(self) -> str:
         return "Аккаунт уже активирован"
+
+
+@dataclass(eq=False)
+class AuthError(ApplicationException):
+    status_code = 500
+
+    @property
+    def message(self) -> str:
+        return "Ошибка аутентификации"

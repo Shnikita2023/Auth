@@ -31,6 +31,11 @@ class AuthJWT(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTE: int
 
 
+class AuthGoogle(BaseSettings):
+    CLIENT_ID: str
+    CLIENT_SECRET: str
+
+
 class KafkaSettings(BaseSettings):
     KAFKA_HOST: str
     KAFKA_PORT: int
@@ -61,6 +66,7 @@ class EmailSettings(BaseSettings):
 class Settings:
     db: DbSettings = DbSettings()
     auth_jwt: AuthJWT = AuthJWT()
+    auth_google: AuthGoogle = AuthGoogle()
     session_cookie: SessionCookie = SessionCookie()
     kafka: KafkaSettings = KafkaSettings()
     redis: RedisSettings = RedisSettings()

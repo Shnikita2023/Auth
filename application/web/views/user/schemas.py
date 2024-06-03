@@ -1,4 +1,5 @@
 import re
+from uuid import uuid4
 
 from pydantic import BaseModel, field_validator, Field as f
 
@@ -107,6 +108,15 @@ class CredentialOutput(CredentialBase):
             role=credential.role.name,
             status=credential.status.value
         )
+
+
+class CredentialInputGoogle(BaseModel):
+    oid: str = f(default_factory=lambda: str(uuid4()))
+    first_name: str = f(title="Имя")
+    last_name: str = f(title="Фамилия")
+    email: str = f(title="Емайл")
+    role: str = f(title="Роль", default="USER")
+    status: str = f(title="Статус", default="ACTIVE")
 
 
 class ForgotUser(EmailUser):

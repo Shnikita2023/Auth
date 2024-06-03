@@ -3,18 +3,36 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status, BackgroundTasks
 from redis.asyncio import Redis
 
-from application.domain.entities.credential import Credential as DomainCredential
+from starlette.requests import Request
+from authlib.integrations.starlette_client import OAuth, OAuthError
 
+from application.config import settings
+from application.domain.entities.credential import Credential as DomainCredential
+from application.exceptions import AuthError
 from application.infrastructure.brokers.producers.kafka import ProducerKafka
 from application.infrastructure.dependencies.dependence import get_kafka_producer, get_async_redis_client
 from application.infrastructure.email_service.send_letter import send_password_reset_email
 from application.services.user import get_credential_service, CredentialService
 from application.web.services.token.schemas import TokenInfo
 from application.web.services.token.token_jwt import token_manager, ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
-from application.web.views.user.schemas import CredentialOutput, CredentialInput, ForgotUser, ResetUser
+from application.web.views.user.schemas import (
+    CredentialOutput, CredentialInput,
+    ForgotUser, ResetUser, CredentialInputGoogle
+)
 
 router = APIRouter(prefix="/auth",
                    tags=["Auth"])
+oauth = OAuth()
+oauth.register(
+    name='google',
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_id=settings.auth_google.CLIENT_ID,
+    client_secret=settings.auth_google.CLIENT_SECRET,
+    client_kwargs={
+        'scope': 'email openid profile',
+        'redirect_url': 'http://localhost:8002/api/v1/auth/google'
+    }
+)
 
 
 @router.post(path="/sign-up",
@@ -44,6 +62,37 @@ async def login_user(
     access_token = token_manager.create_token(credo_schema=credo_schema, type_token=ACCESS_TOKEN_TYPE)
     refresh_token = token_manager.create_token(credo_schema=credo_schema, type_token=REFRESH_TOKEN_TYPE)
     return TokenInfo(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.get(path="/login-google",
+            summary="Аутентификация пользователя в сервисе Google",
+            status_code=status.HTTP_200_OK)
+async def login_user_to_google(request: Request):
+    url = request.url_for("auth_google")
+    return await oauth.google.authorize_redirect(request, url)
+
+
+@router.get(path="/google",
+            status_code=status.HTTP_200_OK)
+async def auth_google(request: Request):
+    try:
+        data_token = await oauth.google.authorize_access_token(request)
+    except OAuthError:
+        raise AuthError
+
+    user = data_token.get("userinfo")
+    token = data_token.get("id_token")
+    if user and token:
+        credo_schema = CredentialInputGoogle(
+            first_name=user.given_name,
+            last_name=user.family_name,
+            email=user.email,
+        )
+        access_token = token_manager.create_token(credo_schema=credo_schema,
+                                                  type_token=ACCESS_TOKEN_TYPE)
+        refresh_token = token_manager.create_token(credo_schema=credo_schema,
+                                                   type_token=REFRESH_TOKEN_TYPE)
+        return TokenInfo(access_token=access_token, refresh_token=refresh_token)
 
 
 @router.post(path="/refresh",
