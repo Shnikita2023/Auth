@@ -65,7 +65,6 @@ class Credential(Base):
             "first_name": credential.first_name.value,
             "last_name": credential.last_name.value,
             "middle_name": credential.middle_name.value,
-            "password": credential.password,
             "email": credential.email.value,
             "role": credential.role.name,
             "number_phone": credential.number_phone.value,

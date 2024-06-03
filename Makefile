@@ -16,5 +16,11 @@ dev_migration:
 dev_upgrade:
 	alembic upgrade head
 
+test_up:
+	docker compose -f docker-compose-dev.yaml up -d
+
+test_down:
+	docker compose -f docker-compose-dev.yaml down --remove-orphans && docker volume prune -f
+
 test:
-	pytest -v
+	pytest application/tests/infrastructure -v

@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+
+
+  database_test:
+    image: postgres:latest
+    restart: always
+    container_name: "database_test"
+    env_file:
+      - .env.dev
+    ports:
+      - "5474:5432"
+    networks:
+      - custom
+
+networks:
+  custom:
+    driver: bridge

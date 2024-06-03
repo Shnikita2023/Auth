@@ -12,10 +12,23 @@ class DbSettings(BaseSettings):
     DB_USER: str
     DB_PASS: str
 
+    DB_HOST_TEST: str
+    DB_PORT_TEST: int
+    DB_NAME_TEST: str
+    DB_USER_TEST: str
+    DB_PASS_TEST: str
+
     @property
     def database_url_asyncpg(self) -> str:
         return (f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@"
                 f"{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}")
+
+    @property
+    def database_test_url_asyncpg(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.DB_USER_TEST}:{self.DB_PASS_TEST}@"
+            f"{self.DB_HOST_TEST}:{self.DB_PORT_TEST}/{self.DB_NAME_TEST}"
+        )
 
 
 class SessionCookie(BaseSettings):
