@@ -18,7 +18,7 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
         logger.info(f"Успешная отправка письма о сбросе пароля на {email}")
 
 
-async def send_letter_on_activate_account(email: EmailStr, activation_code: str) -> None:
+async def send_letter_to_activate_account(email: EmailStr, activation_code: str) -> None:
     """Отправка сообщение об успешной регистрации"""
     body = f"Привет, перейдите по ссылке для активации аккаунта:: {URL}activate?code={activation_code}"
     title = "Активация аккаунта"

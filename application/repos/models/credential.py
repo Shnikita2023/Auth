@@ -50,7 +50,7 @@ class Credential(Base):
             last_name=credential.last_name.value,
             middle_name=credential.middle_name.value,
             email=credential.email.value,
-            password=credential.password,
+            password=credential.password.value.encode(),
             role=credential.role.name,
             number_phone=credential.number_phone.value,
             time_call=credential.time_call,

@@ -15,3 +15,6 @@ dev_migration:
 
 dev_upgrade:
 	alembic upgrade head
+
+test:
+	pytest -v

@@ -12,7 +12,7 @@ from application.events import UserRegisteredEvent, UserUpdatedStatusEvent
 from application.exceptions import UserNotFoundError, UserAlreadyExistsError, InvalidUserDataError, AccountActivateError
 from application.infrastructure.brokers.producers.kafka import ProducerKafka
 from application.infrastructure.dependencies.dependence import get_unit_of_work
-from application.infrastructure.email_service.send_letter import send_letter_on_activate_account
+from application.infrastructure.email_service.send_letter import send_letter_to_activate_account
 from application.repos.uow.unit_of_work import AbstractUnitOfWork
 from application.services.user.utils import (
     PasswordForgot, PasswordReset,
@@ -62,7 +62,7 @@ class CredentialService:
         activation_code: str = secrets.token_urlsafe(16)
         await asyncio.gather(
             save_activation_code_to_redis(user_oid=user.oid, redis_client=redis_client, code=activation_code),
-            send_letter_on_activate_account(email=user.email.value, activation_code=activation_code)
+            send_letter_to_activate_account(email=user.email.value, activation_code=activation_code)
         )
 
     async def _check_existing_user(self, params_search: dict[str, Any]) -> Optional[DomainCredential]:

@@ -59,7 +59,8 @@ class Credential(BaseModel):
             pwd_bytes: bytes = new_password.encode()
         else:
             pwd_bytes: bytes = self.password.value.encode()
-        self.password: bytes = bcrypt.hashpw(pwd_bytes, salt)
+        hashed_password: bytes = bcrypt.hashpw(pwd_bytes, salt)
+        self.password = Password(hashed_password.decode())
 
     def is_password_valid(self, password: str) -> bool:
         return bcrypt.checkpw(password=password.encode(), hashed_password=self.password.value.encode())
