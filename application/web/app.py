@@ -53,7 +53,7 @@ async def default_exception(request: Request, exc: Exception) -> JSONResponse:
 
 
 main_app.include_router(router_v1, prefix="/api/v1")
-main_app.add_middleware(SessionMiddleware, secret_key="ghvabsg123fsdf")
+main_app.add_middleware(SessionMiddleware, secret_key=settings.auth_google.SECRET_KEY_FOR_SESSION)
 
 main_app.add_middleware(
     CORSMiddleware,

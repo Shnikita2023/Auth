@@ -47,6 +47,7 @@ class AuthJWT(BaseSettings):
 class AuthGoogle(BaseSettings):
     CLIENT_ID: str
     CLIENT_SECRET: str
+    SECRET_KEY_FOR_SESSION: str
 
 
 class KafkaSettings(BaseSettings):

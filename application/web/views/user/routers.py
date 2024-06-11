@@ -9,7 +9,6 @@ from application.config import settings
 from application.domain.entities.credential import Credential as DomainCredential
 from application.exceptions import AuthError
 from application.infrastructure.brokers.producers.kafka import ProducerKafka
-from application.infrastructure.cache.redis import get_cache_client, RedisCacheStore
 from application.infrastructure.dependencies.dependence import get_kafka_producer
 from application.infrastructure.email_service.send_letter import send_password_reset_email
 from application.services.user import get_credential_service, CredentialService
@@ -80,17 +79,19 @@ async def auth_google(request: Request):
 
     user = data_token.get("userinfo")
     token = data_token.get("id_token")
-    if user and token:
-        credo_schema = CredentialInputGoogle(
-            first_name=user.given_name,
-            last_name=user.family_name,
-            email=user.email,
-        )
-        access_token = token_manager.create_token(credo_schema=credo_schema,
-                                                  type_token=ACCESS_TOKEN_TYPE)
-        refresh_token = token_manager.create_token(credo_schema=credo_schema,
-                                                   type_token=REFRESH_TOKEN_TYPE)
-        return TokenInfo(access_token=access_token, refresh_token=refresh_token)
+    if not user or not token:
+        raise AuthError
+
+    credo_schema = CredentialInputGoogle(
+        first_name=user.given_name,
+        last_name=user.family_name,
+        email=user.email,
+    )
+    access_token = token_manager.create_token(credo_schema=credo_schema,
+                                              type_token=ACCESS_TOKEN_TYPE)
+    refresh_token = token_manager.create_token(credo_schema=credo_schema,
+                                               type_token=REFRESH_TOKEN_TYPE)
+    return TokenInfo(access_token=access_token, refresh_token=refresh_token)
 
 
 @router.post(path="/refresh",
@@ -141,13 +142,3 @@ async def activate_account(code: str,
     return {"status": "successfully",
             "data": f"{datetime.now()}",
             "detail": "Аккаунт успешно активирован"}
-
-
-@router.get(path="/set",
-            status_code=status.HTTP_200_OK)
-async def set_value() -> dict:
-
-    async with get_cache_client(RedisCacheStore("my_cache_store")) as redis_store:
-        await redis_store.set(key="name", value="Nikita")
-        res = await redis_store.get("name")
-        return {"message": res}
