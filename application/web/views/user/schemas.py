@@ -59,7 +59,7 @@ class PasswordUser(BaseModel):
 class CredentialBase(EmailUser):
     first_name: str = f(title="Имя")
     last_name: str = f(title="Фамилия")
-    middle_name: str | None = f(default=None, title="Отчество")
+    middle_name: str = f(title="Отчество")
     number_phone: str = f(title="Номер телефона")
     time_call: str | None = f(
         title="Время звонка",
@@ -70,7 +70,7 @@ class CredentialBase(EmailUser):
 
     @field_validator("first_name", "last_name", "middle_name")
     @classmethod
-    def validate_full_name(cls, value_field: str) -> str:
+    def validate_full_name(cls, value_field: str) -> str | None:
         username_regex = r"^[А-ЯЁ][а-яё]+$|^[A-Z][a-z]+$"
         if not re.match(username_regex, value_field) or len(value_field) > 100:
             raise FullNameValidationError(value_field)

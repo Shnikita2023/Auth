@@ -6,16 +6,16 @@ from application.repos.credential import SQLAlchemyCredentialRepository
 
 
 async def test_add_credential(credential: DomainCredential,
-                              async_session: AsyncSession):
-    repo = SQLAlchemyCredentialRepository(session=async_session)
+                              async_session: AsyncSession,
+                              repo: SQLAlchemyCredentialRepository):
     added_credential = await repo.add(credential)
     await async_session.commit()
     assert added_credential.oid == credential.oid
 
 
 async def test_get_credential(credential: DomainCredential,
-                              async_session: AsyncSession):
-    repo = SQLAlchemyCredentialRepository(session=async_session)
+                              async_session: AsyncSession,
+                              repo: SQLAlchemyCredentialRepository):
     await repo.add(credential)
     await async_session.commit()
     fetched_credential = await repo.get(credo_oid="4aca4d42-d7cf-44dc-9081-4de782d465ff")
@@ -24,8 +24,8 @@ async def test_get_credential(credential: DomainCredential,
 
 
 async def test_get_one_by_any_params(credential: DomainCredential,
-                                     async_session: AsyncSession):
-    repo = SQLAlchemyCredentialRepository(session=async_session)
+                                     async_session: AsyncSession,
+                                     repo: SQLAlchemyCredentialRepository):
     await repo.add(credential)
     await async_session.commit()
     params = {"email": "alice@example.com"}
@@ -35,8 +35,8 @@ async def test_get_one_by_any_params(credential: DomainCredential,
 
 
 async def test_get_one_by_all_params(credential: DomainCredential,
-                                     async_session: AsyncSession):
-    repo = SQLAlchemyCredentialRepository(session=async_session)
+                                     async_session: AsyncSession,
+                                     repo: SQLAlchemyCredentialRepository):
     await repo.add(credential)
     await async_session.commit()
     params = {
@@ -50,8 +50,8 @@ async def test_get_one_by_all_params(credential: DomainCredential,
 
 
 async def test_update_credential(credential: DomainCredential,
-                                 async_session: AsyncSession):
-    repo = SQLAlchemyCredentialRepository(session=async_session)
+                                 async_session: AsyncSession,
+                                 repo: SQLAlchemyCredentialRepository):
     await repo.add(credential)
     await async_session.commit()
     updated_credential = DomainCredential(

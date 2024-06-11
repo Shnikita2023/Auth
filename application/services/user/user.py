@@ -39,7 +39,6 @@ class CredentialService:
     async def create_user(self,
                           user: DomainCredential,
                           background_tasks: BackgroundTasks,
-                          redis_client: Redis,
                           kafka_producer: ProducerKafka) -> DomainCredential:
         params_search = {"email": user.email.value, "number_phone": user.number_phone.value}
         async with self.uow:
@@ -50,7 +49,7 @@ class CredentialService:
             user.encrypt_password()
             await self.uow.credential.add(user)
             await self.uow.commit()
-            background_tasks.add_task(self._on_after_create_user, user, redis_client)
+            background_tasks.add_task(self._on_after_create_user, user)
             broker_message = UserRegisteredEvent(message=user.to_dict())
             asyncio.create_task(kafka_producer.delivery_message(message=broker_message.to_json(),
                                                                 topic=settings.kafka.USER_TOPIC))
@@ -58,10 +57,10 @@ class CredentialService:
         return user
 
     @staticmethod
-    async def _on_after_create_user(user: DomainCredential, redis_client: Redis) -> None:
+    async def _on_after_create_user(user: DomainCredential) -> None:
         activation_code: str = secrets.token_urlsafe(16)
         await asyncio.gather(
-            save_activation_code_to_redis(user_oid=user.oid, redis_client=redis_client, code=activation_code),
+            save_activation_code_to_redis(user_oid=user.oid, code=activation_code),
             send_letter_to_activate_account(email=user.email.value, activation_code=activation_code)
         )
 
@@ -80,35 +79,32 @@ class CredentialService:
         return user
 
     async def forgot_password_user(self,
-                                   email: str,
-                                   redis_client: Redis) -> str:
+                                   email: str) -> str:
         async with self.uow:
             params_search = {"email": email}
             credential: DomainCredential | None = await self.uow.credential.get_one_by_all_params(params_search)
             if not credential:
                 raise UserNotFoundError
-            return await PasswordForgot().forgot_password(redis_client=redis_client,
-                                                          user_oid=credential.oid)
+
+            return await PasswordForgot().forgot_password(user_oid=credential.oid)
 
     async def reset_password_user(self,
                                   email: str,
                                   new_password: str,
-                                  token: str,
-                                  redis_client: Redis) -> None:
+                                  token: str) -> None:
         async with self.uow:
             params_search = {"email": email}
             credential: DomainCredential | None = await self.uow.credential.get_one_by_all_params(params_search)
             if not credential:
                 raise UserNotFoundError
-            await PasswordReset().reset_password(redis_client=redis_client,
-                                                 user_oid=credential.oid,
-                                                 token=token)
+
+            await PasswordReset().reset_password(user_oid=credential.oid, token=token)
             credential.encrypt_password(new_password)
             await self.uow.credential.update(credo=credential)
             await self.uow.commit()
 
-    async def validate_activation_code(self, code: str, redis_client: Redis, kafka_producer: ProducerKafka):
-        user_oid: str = await check_activation_code_from_redis(redis_client, code)
+    async def validate_activation_code(self, code: str, kafka_producer: ProducerKafka):
+        user_oid: str = await check_activation_code_from_redis(code)
         user: DomainCredential = await self.get_user_by_id(user_oid)
         if user.status.name == "ACTIVE":
             raise AccountActivateError

@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 
 import pytest
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
@@ -39,3 +40,9 @@ async def prepare_database():
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
+
+@pytest.fixture()
+async def async_client() -> AsyncGenerator[AsyncClient, None]:
+    """Фикстура для создания асинхронного клиента"""
+    async with AsyncClient(transport=ASGITransport(app=main_app), base_url="http://test") as async_client:
+        yield async_client

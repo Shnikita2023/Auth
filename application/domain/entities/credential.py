@@ -13,7 +13,7 @@ class Credential(BaseModel):
     oid: str = f(default_factory=lambda: str(uuid4()))
     first_name: FullName = f(title="Имя")
     last_name: FullName = f(title="Фамилия")
-    middle_name: FullName | None = f(title="Отчество", default=None)
+    middle_name: FullName = f(title="Отчество")
     email: Email = f(title="Email")
     password: Password = f(title="Пароль")
     role: Role = f(title="Роль", default=Role.USER)

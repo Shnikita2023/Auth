@@ -25,6 +25,10 @@ itsdangerous = "^2.2.0"
 pytest = "^8.2.1"
 pytest-asyncio = "^0.23.7"
 aiosqlite = "^0.20.0"
+flask = "^3.0.3"
+aiogram = "^3.7.0"
+async-lru = "^2.0.4"
+httpx = "^0.27.0"
 
 [build-system]
 requires = ["poetry-core"]

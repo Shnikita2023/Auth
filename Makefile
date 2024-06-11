@@ -11,7 +11,7 @@ run_server:
 	uvicorn application.web.app:main_app --port 8002 --reload
 
 dev_migration:
-	alembic revision --autogenerate -m "Initial tables v1"
+	alembic revision --autogenerate -m "Initial tables v3"
 
 dev_upgrade:
 	alembic upgrade head
@@ -23,4 +23,4 @@ test_down:
 	docker compose -f docker-compose-dev.yaml down --remove-orphans && docker volume prune -f
 
 test:
-	pytest application/tests/infrastructure -v
+	pytest application/tests/web -v

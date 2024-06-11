@@ -17,12 +17,12 @@ class Credential(Base):
                                       server_default=text("gen_random_uuid()"))
     first_name: Mapped[str] = mapped_column(String(50))
     last_name: Mapped[str] = mapped_column(String(50))
-    middle_name: Mapped[str | None] = mapped_column(String(50))
+    middle_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     password: Mapped[bytes] = mapped_column(LargeBinary)
     role: Mapped[str]
     number_phone: Mapped[str] = mapped_column(String(11), unique=True, index=True)
-    time_call: Mapped[str] = mapped_column(String(50))
+    time_call: Mapped[str | None] = mapped_column(String(50))
     status: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
 

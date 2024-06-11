@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, BackgroundTasks
-from redis.asyncio import Redis
 
 from starlette.requests import Request
 from authlib.integrations.starlette_client import OAuth, OAuthError
@@ -10,7 +9,8 @@ from application.config import settings
 from application.domain.entities.credential import Credential as DomainCredential
 from application.exceptions import AuthError
 from application.infrastructure.brokers.producers.kafka import ProducerKafka
-from application.infrastructure.dependencies.dependence import get_kafka_producer, get_async_redis_client
+from application.infrastructure.cache.redis import get_cache_client, RedisCacheStore
+from application.infrastructure.dependencies.dependence import get_kafka_producer
 from application.infrastructure.email_service.send_letter import send_password_reset_email
 from application.services.user import get_credential_service, CredentialService
 from application.web.services.token.schemas import TokenInfo
@@ -42,11 +42,9 @@ oauth.register(
 async def add_user(credo_service: Annotated[CredentialService, Depends(get_credential_service)],
                    kafka_producer: Annotated[ProducerKafka, Depends(get_kafka_producer)],
                    credo_schema: CredentialInput,
-                   background_tasks: BackgroundTasks,
-                   redis_client: Redis = Depends(get_async_redis_client)) -> CredentialOutput:
+                   background_tasks: BackgroundTasks) -> CredentialOutput:
     user = await credo_service.create_user(user=credo_schema.to_domain(),
                                            background_tasks=background_tasks,
-                                           redis_client=redis_client,
                                            kafka_producer=kafka_producer)
     return CredentialOutput.to_schema(user)
 
@@ -111,9 +109,8 @@ async def refresh_access_token(payload: Annotated[dict, Depends(token_manager.ge
              status_code=status.HTTP_200_OK)
 async def forgot_password(forgot_schema: ForgotUser,
                           background_tasks: BackgroundTasks,
-                          credo_service: Annotated[CredentialService, Depends(get_credential_service)],
-                          redis_client: Redis = Depends(get_async_redis_client)) -> dict:
-    temporary_token = await credo_service.forgot_password_user(email=forgot_schema.email, redis_client=redis_client)
+                          credo_service: Annotated[CredentialService, Depends(get_credential_service)]) -> dict:
+    temporary_token = await credo_service.forgot_password_user(email=forgot_schema.email)
     background_tasks.add_task(send_password_reset_email, email=forgot_schema.email, token=temporary_token)
     return {"status": "successfully",
             "data": f"{datetime.now()}",
@@ -124,12 +121,10 @@ async def forgot_password(forgot_schema: ForgotUser,
               summary="Сброс пароля пользователя",
               status_code=status.HTTP_200_OK)
 async def reset_password(reset_schema: ResetUser,
-                         credo_service: Annotated[CredentialService, Depends(get_credential_service)],
-                         redis_client: Redis = Depends(get_async_redis_client)) -> dict:
+                         credo_service: Annotated[CredentialService, Depends(get_credential_service)]) -> dict:
     await credo_service.reset_password_user(email=reset_schema.email,
                                             new_password=reset_schema.password,
-                                            token=reset_schema.token,
-                                            redis_client=redis_client)
+                                            token=reset_schema.token)
     return {"status": "successfully",
             "data": f"{datetime.now()}",
             "detail": "Пароль успешно сброшен и установлен новый"}
@@ -140,11 +135,19 @@ async def reset_password(reset_schema: ResetUser,
             status_code=status.HTTP_200_OK)
 async def activate_account(code: str,
                            credo_service: Annotated[CredentialService, Depends(get_credential_service)],
-                           kafka_producer: Annotated[ProducerKafka, Depends(get_kafka_producer)],
-                           redis_client: Redis = Depends(get_async_redis_client)) -> dict:
+                           kafka_producer: Annotated[ProducerKafka, Depends(get_kafka_producer)]) -> dict:
     await credo_service.validate_activation_code(code=code,
-                                                 redis_client=redis_client,
                                                  kafka_producer=kafka_producer)
     return {"status": "successfully",
             "data": f"{datetime.now()}",
             "detail": "Аккаунт успешно активирован"}
+
+
+@router.get(path="/set",
+            status_code=status.HTTP_200_OK)
+async def set_value() -> dict:
+
+    async with get_cache_client(RedisCacheStore("my_cache_store")) as redis_store:
+        await redis_store.set(key="name", value="Nikita")
+        res = await redis_store.get("name")
+        return {"message": res}

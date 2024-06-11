@@ -1,6 +1,10 @@
+from unittest.mock import AsyncMock
+
 import pytest
 
 from application.domain.values.credential import FullName, Email, Password, Phone
+from application.infrastructure.brokers.client.kafka.broker import KafkaProducer
+from application.infrastructure.brokers.producers.kafka import ProducerKafka
 from application.repos.credential import SQLAlchemyCredentialRepository
 from application.tests.conftest import async_session_maker_test
 from application.domain.entities.credential import Credential as DomainCredential
@@ -24,3 +28,14 @@ async def credential() -> DomainCredential:
         time_call="in 8h",
         number_phone=Phone("89031110112"))
 
+
+@pytest.fixture
+def broker_kafka() -> KafkaProducer:
+    return KafkaProducer()
+
+
+@pytest.fixture
+def producer_kafka() -> ProducerKafka:
+    producer = ProducerKafka(url="kafka://test")
+    producer.producer = AsyncMock()
+    return producer
