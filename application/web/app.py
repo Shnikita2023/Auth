@@ -16,21 +16,20 @@ from application.web.views import router as router_v1
 
 logger = logging.getLogger(__name__)
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_logger(pathname="app", filename="app.log")
-    app.state.producer_kafka = ProducerKafka(url=settings.kafka.KAFKA_HOST)
-    await app.state.producer_kafka.initialization()
-    yield
-    await app.state.producer_kafka.finalization()
+#
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     init_logger(pathname="app", filename="app.log")
+#     app.state.producer_kafka = ProducerKafka(url=settings.kafka.KAFKA_HOST)
+#     await app.state.producer_kafka.initialization()
+#     yield
+#     await app.state.producer_kafka.finalization()
 
 
 main_app = FastAPI(version="1.1.1",
                    title="Auth",
                    docs_url="/api/docs",
-                   debug=True,
-                   lifespan=lifespan
+                   debug=True
                    )
 
 

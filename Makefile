@@ -4,11 +4,11 @@ dev_up:
 dev_down:
 	docker compose down --remove-orphans && docker volume prune -f && docker image rm fast_api_build
 
-include .env.dev
+include .env
 export
 
 run_server:
-	uvicorn application.web.app:main_app --port 8002 --workers 1
+	uvicorn application.web.app:main_app --port 8000 --workers 1
 
 dev_migration:
 	alembic revision --autogenerate -m "Initial tables v3"
