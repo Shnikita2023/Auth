@@ -13,6 +13,7 @@ from application.infrastructure.brokers.producers.kafka import ProducerKafka
 from application.logging_config import init_logger
 from application.web.views import router as router_v1
 
+
 logger = logging.getLogger(__name__)
 
 

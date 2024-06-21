@@ -36,7 +36,7 @@ class AIOSMTPClient(EmailClient):
         except aiosmtplib.SMTPAuthenticationError:
             raise SMTPAuthError
 
-        except (aiosmtplib.SMTPServerDisconnected, aiosmtplib.SMTPConnectError):
+        except aiosmtplib.SMTPException:
             raise SMTPConnectError
 
     async def send_notification(self, body: str, email: EmailStr, title: str):
@@ -49,7 +49,7 @@ class AIOSMTPClient(EmailClient):
             message.add_alternative(body, subtype='html')
             await self.client.send_message(message)
 
-        except aiosmtplib.SMTPServerDisconnected:
+        except aiosmtplib.SMTPException:
             raise SMTPConnectError
 
     async def disconnect(self):

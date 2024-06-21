@@ -23,13 +23,13 @@ router = APIRouter(prefix="/auth",
                    tags=["Auth"])
 oauth = OAuth()
 oauth.register(
-    name='google',
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    name="google",
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_id=settings.auth_google.CLIENT_ID,
     client_secret=settings.auth_google.CLIENT_SECRET,
     client_kwargs={
-        'scope': 'email openid profile',
-        'redirect_url': 'http://localhost:8002/api/v1/auth/google'
+        "scope": "email openid profile",
+        "redirect_url": "http://localhost:8002/api/v1/auth/google"
     }
 )
 
@@ -70,8 +70,9 @@ async def login_user_to_google(request: Request):
 
 
 @router.get(path="/google",
-            status_code=status.HTTP_200_OK)
-async def auth_google(request: Request):
+            status_code=status.HTTP_200_OK,
+            response_model=TokenInfo)
+async def auth_google(request: Request) -> TokenInfo:
     try:
         data_token = await oauth.google.authorize_access_token(request)
     except OAuthError:

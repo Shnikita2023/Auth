@@ -4,7 +4,7 @@ import secrets
 from typing import Optional, Any
 
 from fastapi import Form, BackgroundTasks
-from redis.asyncio import Redis
+from sqlalchemy.exc import IntegrityError
 
 from application.config import settings
 from application.domain.entities.credential import Credential as DomainCredential
@@ -38,23 +38,22 @@ class CredentialService:
 
     async def create_user(self,
                           user: DomainCredential,
-                          background_tasks: BackgroundTasks,
-                          kafka_producer: ProducerKafka) -> DomainCredential:
-        params_search = {"email": user.email.value, "number_phone": user.number_phone.value}
-        async with self.uow:
-            existing_user = await self._check_existing_user(params_search)
-            if existing_user:
-                raise UserAlreadyExistsError
+                          kafka_producer: ProducerKafka,
+                          background_tasks: BackgroundTasks) -> DomainCredential:
+        try:
+            async with self.uow:
+                user.encrypt_password()
+                await self.uow.credential.add(user)
+                await self.uow.commit()
+                background_tasks.add_task(self._on_after_create_user, user)
+                broker_message = UserRegisteredEvent(message=user.to_dict())
+                asyncio.create_task(kafka_producer.delivery_message(message=broker_message.to_json(),
+                                                                    topic=settings.kafka.USER_TOPIC))
+                logger.info(f"Пользователь с id {user.oid} успешно создан. Status: 201")
+            return user
 
-            user.encrypt_password()
-            await self.uow.credential.add(user)
-            await self.uow.commit()
-            background_tasks.add_task(self._on_after_create_user, user)
-            broker_message = UserRegisteredEvent(message=user.to_dict())
-            asyncio.create_task(kafka_producer.delivery_message(message=broker_message.to_json(),
-                                                                topic=settings.kafka.USER_TOPIC))
-            logger.info(f"Пользователь с id {user.oid} успешно создан. Status: 201")
-        return user
+        except IntegrityError:
+            raise UserAlreadyExistsError
 
     @staticmethod
     async def _on_after_create_user(user: DomainCredential) -> None:

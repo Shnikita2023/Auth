@@ -18,6 +18,11 @@ class DbSettings(BaseSettings):
     DB_USER_TEST: str
     DB_PASS_TEST: str
 
+    ECHO: bool
+    ECHO_POOL: bool
+    POOL_SIZE: int
+    MAX_OVERFLOW: int
+
     @property
     def database_url_asyncpg(self) -> str:
         return (f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@"
