@@ -13,3 +13,4 @@ RUN poetry install --no-root --no-interaction --no-ansi
 # Этап 2: Копирование приложения для base
 FROM base AS app
 COPY . .
+CMD ["uvicorn", "application.web.app:main_app", "--port", "8000"]

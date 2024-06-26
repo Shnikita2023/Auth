@@ -141,3 +141,8 @@ async def activate_account(code: str,
     return {"status": "successfully",
             "data": f"{datetime.now()}",
             "detail": "Аккаунт успешно активирован"}
+
+
+@router.get(path="/hello")
+def get_hello():
+    return settings.db.DB_HOST

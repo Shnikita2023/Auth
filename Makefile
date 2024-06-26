@@ -8,7 +8,7 @@ include .env
 export
 
 run_server:
-	uvicorn application.web.app:main_app --port 8000 --workers 1
+	uvicorn application.web.app:main_app --port 8000 --reload
 
 dev_migration:
 	alembic revision --autogenerate -m "Initial tables v3"
@@ -24,3 +24,9 @@ test_down:
 
 test:
 	pytest application/tests/web -v
+
+deploy_server:
+	docker build . -t kubernetes-fastapi-app-img
+	docker tag kubernetes-fastapi-app-img nikitapython/fast_api:v3
+	docker push nikitapython/fast_api:v3
+

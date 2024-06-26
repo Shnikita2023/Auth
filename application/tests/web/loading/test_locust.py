@@ -24,4 +24,4 @@ class UserBehavior(HttpUser):
             "middle_name": "Iofaf",
             "time_call": "in 8h"
         }
-        response = self.client.post("http://127.0.0.1:8002/api/v1/auth/sign-up", json=credo_schema)
+        response = self.client.get("http://127.0.0.1:8005/api/v1/auth/hello")
