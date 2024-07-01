@@ -40,9 +40,11 @@ oauth.register(
              status_code=status.HTTP_201_CREATED)
 async def add_user(credo_service: Annotated[CredentialService, Depends(get_credential_service)],
                    credo_schema: CredentialInput,
-                   background_tasks: BackgroundTasks) -> CredentialOutput:
+                   background_tasks: BackgroundTasks,
+                   kafka_producer: get_kafka_producer) -> CredentialOutput:
     user = await credo_service.create_user(user=credo_schema.to_domain(),
-                                           background_tasks=background_tasks)
+                                           background_tasks=background_tasks,
+                                           kafka_producer=kafka_producer)
     return CredentialOutput.to_schema(user)
 
 

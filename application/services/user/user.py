@@ -38,16 +38,17 @@ class CredentialService:
 
     async def create_user(self,
                           user: DomainCredential,
-                          background_tasks: BackgroundTasks) -> DomainCredential:
+                          background_tasks: BackgroundTasks,
+                          kafka_producer: ProducerKafka) -> DomainCredential:
         try:
             async with self.uow:
                 user.encrypt_password()
                 await self.uow.credential.add(user)
                 await self.uow.commit()
-                # background_tasks.add_task(self._on_after_create_user, user)
-                # broker_message = UserRegisteredEvent(message=user.to_dict())
-                # asyncio.create_task(kafka_producer.delivery_message(message=broker_message.to_json(),
-                #                                                     topic=settings.kafka.USER_TOPIC))
+                background_tasks.add_task(self._on_after_create_user, user)
+                broker_message = UserRegisteredEvent(message=user.to_dict())
+                asyncio.create_task(kafka_producer.delivery_message(message=broker_message.to_json(),
+                                                                    topic=settings.kafka.USER_TOPIC))
                 logger.info(f"Пользователь с id {user.oid} успешно создан. Status: 201")
             return user
 
