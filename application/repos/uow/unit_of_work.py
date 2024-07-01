@@ -39,8 +39,6 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     async def __aexit__(self, *args) -> None:
         await self.rollback()
         await self.session.close()
-        pool = self.session.bind.pool
-        print(f"Cтатус Pool: {pool.status()}")
 
     async def commit(self) -> None:
         await self.session.commit()
