@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+import sentry_sdk
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -16,20 +17,29 @@ from application.web.views import router as router_v1
 
 logger = logging.getLogger(__name__)
 
-#
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     init_logger(pathname="app", filename="app.log")
-#     app.state.producer_kafka = ProducerKafka(url=settings.kafka.KAFKA_HOST)
-#     await app.state.producer_kafka.initialization()
-#     yield
-#     await app.state.producer_kafka.finalization()
+sentry_sdk.init(
+    dsn="https://6a4f782139a6155faabe13ac33067ecc@o4505980199305216.ingest.us.sentry.io/4507476922466304",
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+)
+
+app = FastAPI()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_logger(pathname="app", filename="app.log")
+    app.state.producer_kafka = ProducerKafka(url=settings.kafka.KAFKA_HOST)
+    await app.state.producer_kafka.initialization()
+    yield
+    await app.state.producer_kafka.finalization()
 
 
 main_app = FastAPI(version="1.1.1",
                    title="Auth",
                    docs_url="/api/docs",
-                   debug=True
+                   debug=True,
+                   lifespan=lifespan
                    )
 
 
