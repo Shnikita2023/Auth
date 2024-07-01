@@ -24,12 +24,12 @@ router = APIRouter(prefix="/auth",
 oauth = OAuth()
 oauth.register(
     name="google",
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    server_metadata_url=settings.auth_google.SERVER_METADATA_URL,
     client_id=settings.auth_google.CLIENT_ID,
     client_secret=settings.auth_google.CLIENT_SECRET,
     client_kwargs={
         "scope": "email openid profile",
-        "redirect_url": "http://localhost:8002/api/v1/auth/google"
+        "redirect_url": settings.auth_google.REDIRECT_URL,
     }
 )
 
@@ -142,7 +142,3 @@ async def activate_account(code: str,
             "data": f"{datetime.now()}",
             "detail": "Аккаунт успешно активирован"}
 
-
-@router.get(path="/hello")
-def get_hello():
-    return settings.db.DB_HOST

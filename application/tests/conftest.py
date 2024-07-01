@@ -16,8 +16,7 @@ engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
 async_session_maker_test: async_sessionmaker[AsyncSession] = async_sessionmaker(
     bind=engine_test,
     class_=AsyncSession,
-    expire_on_commit=False,
-    autoflush=False
+    expire_on_commit=False
 )
 
 
@@ -31,7 +30,7 @@ main_app.dependency_overrides[async_session_maker] = async_session_maker_test
 main_app.dependency_overrides[async_session_maker_test] = async_session
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 async def prepare_database():
     """Фикстура на создание и удаление таблицы"""
     async with engine_test.begin() as conn:

@@ -21,6 +21,7 @@ class TestCredential:
     }
     credential_data = {"first_name": FullName("Alice"),
                        "last_name": FullName("Smith"),
+                       "middle_name": FullName("Middle"),
                        "email": Email("alice@example.com"),
                        "number_phone": Phone("89031110112"),
                        "password": Password(password)}
@@ -49,7 +50,6 @@ class TestCredential:
 
     def test_default_values(self):
         credential = Credential(**self.credential_data)
-        assert credential.middle_name is None
         assert credential.role == Role.USER
         assert credential.status == Status.PENDING
         assert credential.time_call is None

@@ -18,12 +18,10 @@ from application.web.views import router as router_v1
 logger = logging.getLogger(__name__)
 
 sentry_sdk.init(
-    dsn="https://6a4f782139a6155faabe13ac33067ecc@o4505980199305216.ingest.us.sentry.io/4507476922466304",
+    dsn=settings.sentry.SENTRY_DSN,
     traces_sample_rate=1.0,
     profiles_sample_rate=1.0,
 )
-
-app = FastAPI()
 
 
 @asynccontextmanager
@@ -35,10 +33,10 @@ async def lifespan(app: FastAPI):
     await app.state.producer_kafka.finalization()
 
 
-main_app = FastAPI(version="1.1.1",
-                   title="Auth",
-                   docs_url="/api/docs",
-                   debug=True,
+main_app = FastAPI(version=settings.app.API_VERSION,
+                   title=settings.app.API_TITLE,
+                   docs_url=settings.app.API_DOCS_URL,
+                   debug=settings.app.API_DEBUG,
                    lifespan=lifespan
                    )
 

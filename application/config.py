@@ -54,6 +54,8 @@ class AuthGoogle(BaseSettings):
     CLIENT_ID: str
     CLIENT_SECRET: str
     SECRET_KEY_FOR_SESSION: str
+    REDIRECT_URL: str
+    SERVER_METADATA_URL: str
 
 
 class KafkaSettings(BaseSettings):
@@ -84,6 +86,17 @@ class EmailSettings(BaseSettings):
     SMTP_PORT: int
 
 
+class SentrySettings(BaseSettings):
+    SENTRY_DSN: str
+
+
+class ApiSettings(BaseSettings):
+    API_DOCS_URL: str
+    API_VERSION: str
+    API_DEBUG: bool
+    API_TITLE: str
+
+
 class Settings:
     db: DbSettings = DbSettings()
     auth_jwt: AuthJWT = AuthJWT()
@@ -92,6 +105,8 @@ class Settings:
     kafka: KafkaSettings = KafkaSettings()
     redis: RedisSettings = RedisSettings()
     email: EmailSettings = EmailSettings()
+    sentry: SentrySettings = SentrySettings()
+    app: ApiSettings = ApiSettings()
 
 
 @lru_cache

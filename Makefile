@@ -4,7 +4,7 @@ dev_up:
 dev_down:
 	docker compose down --remove-orphans && docker volume prune -f && docker image rm fast_api_build
 
-include .env
+include .env.dev
 export
 
 run_server:
@@ -23,7 +23,7 @@ test_down:
 	docker compose -f docker-compose-dev.yaml down --remove-orphans && docker volume prune -f
 
 test:
-	pytest application/tests/web -v
+	pytest application/tests -v
 
 deploy_server:
 	docker build . -t kubernetes-fastapi-app-img
